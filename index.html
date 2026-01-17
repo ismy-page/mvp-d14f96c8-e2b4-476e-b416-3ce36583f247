@@ -3,166 +3,110 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Bloom</title>
-    <meta name="description" content="A calm, modern landing page template." />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <title>L'Oréal Beauty Advisor Simulator</title>
+    <meta name="description" content="Interactive customer simulation with real‑time feedback from a virtual trainer for beauty advisory scenarios inspired by L’Oréal best practices." />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div class="page-shell">
-      <header class="container nav">
+    <div class="page">
+      <header class="nav container" role="banner">
         <a class="brand" href="#top" aria-label="Home">
-          <span class="brand-mark"></span>
-          Bloom
+          <span class="brand-mark" aria-hidden="true"></span>
+          L'Oréal Advisor Trainer
         </a>
-        <nav class="nav-links">
-          <a href="#features">Features</a>
-          <a href="#story">Story</a>
-          <a href="#cta">Pricing</a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="#scenario">Scenario</a>
+          <a href="#coach">Trainer</a>
+          <a href="#transcript">Transcript</a>
         </nav>
         <div class="nav-actions">
-          <a class="ghost" href="#features">Explore</a>
-          <a class="pill" href="#cta">Start free</a>
+          <button id="newScenarioBtn" class="ghost" type="button">New scenario</button>
+          <a class="pill" href="#coach">Start training</a>
         </div>
       </header>
 
-      <main id="top" class="container">
-        <section class="hero">
-          <div class="hero-copy">
-            <div class="badge">Fresh drop · crafted for clarity</div>
-            <h1>Build a landing page people fall in love with.</h1>
-            <p class="lede">
-              A light, airy one-page template with room to tell your story, highlight what
-              matters, and guide visitors toward a single, confident action.
-            </p>
-            <div class="hero-actions">
-              <a class="pill" href="#cta">Launch in minutes</a>
-              <a class="ghost" href="#features">See what’s inside</a>
-            </div>
-            <ul class="highlights">
-              <li>Responsive out of the box</li>
-              <li>Typography that stays calm under pressure</li>
-              <li>No build tools—just edit and ship</li>
-            </ul>
-          </div>
-          <div class="hero-visual">
-            <div class="glass-card">
-              <p class="eyebrow">Live preview</p>
-              <h3>Less noise, more delight.</h3>
-              <p>
-                Swap copy, adjust colors, and keep the structure. This is your canvas for a
-                graceful announcement, product launch, or portfolio piece.
-              </p>
-              <div class="stat-row">
-                <div>
-                  <div class="stat-number">98%</div>
-                  <small>Happier first impressions</small>
-                </div>
-                <div>
-                  <div class="stat-number">5 min</div>
-                  <small>From clone to live</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="features" class="section">
+      <main id="top" class="container main">
+        <section id="scenario" class="panel">
           <div class="section-head">
-            <p class="eyebrow">What’s included</p>
-            <h2>Elegant defaults you can trust.</h2>
-            <p class="muted">
-              Clean spacing, balanced colors, and thoughtful microcopy—so you can focus on
-              your product instead of pixels.
-            </p>
+            <p class="eyebrow">Customer simulation</p>
+            <h1>Practice beauty advisory with real‑time coaching.</h1>
+            <p class="muted">Role‑play a live consult. Read the customer prompt, craft your reply, and see instant guidance from an experienced virtual trainer. Built for skin‑care advisory inspired by L’Oréal retail excellence.</p>
           </div>
-          <div class="grid">
-            <article class="feature-card">
-              <div class="icon">✨</div>
-              <h3>Light aesthetic</h3>
-              <p>Soft gradients, airy whitespace, and friendly typography guide the eye.</p>
-            </article>
-            <article class="feature-card">
-              <div class="icon">⚡️</div>
-              <h3>Fast by default</h3>
-              <p>Zero build tools or dependencies—just static files ready for any host.</p>
-            </article>
-            <article class="feature-card">
-              <div class="icon">📱</div>
-              <h3>Responsive</h3>
-              <p>Layouts adapt fluidly across breakpoints without extra work.</p>
-            </article>
-            <article class="feature-card">
-              <div class="icon">🧭</div>
-              <h3>Clear pathways</h3>
-              <p>Calls-to-action stay visible and consistent from hero to footer.</p>
-            </article>
-          </div>
-        </section>
 
-        <section id="story" class="section split">
-          <div class="section-head">
-            <p class="eyebrow">Story</p>
-            <h2>Designed for teams who crave simplicity.</h2>
-            <p class="muted">
-              Whether you’re announcing a launch or collecting signups, Bloom keeps things
-              poised and purposeful. Swap in your copy, drop in a few visuals, and you’re ready.
-            </p>
-          </div>
-          <div class="list-card">
-            <div class="list-row">
-              <div class="dot"></div>
-              <div>
-                <h4>Built to feel confident</h4>
-                <p>Every section reinforces a single outcome. Nothing extra, nothing loud.</p>
+          <div class="grid split">
+            <aside class="card profile" aria-labelledby="profileTitle">
+              <h2 id="profileTitle" class="h4">Customer profile</h2>
+              <dl class="profile-grid">
+                <div><dt>Name</dt><dd id="cName">—</dd></div>
+                <div><dt>Age</dt><dd id="cAge">—</dd></div>
+                <div><dt>Skin type</dt><dd id="cSkin">—</dd></div>
+                <div><dt>Concerns</dt><dd id="cConcerns">—</dd></div>
+                <div><dt>Preferences</dt><dd id="cPrefs">—</dd></div>
+              </dl>
+              <div class="callout" id="cOpening">Loading scenario…</div>
+              <div class="tips">
+                <p class="small"><strong>Goal:</strong> Build rapport, discover needs, and recommend a simple routine with clear usage and SPF.</p>
+                <p class="small"><strong>Compliance:</strong> Avoid medical claims. Suggest patch testing and sun protection when relevant.</p>
               </div>
-            </div>
-            <div class="list-row">
-              <div class="dot"></div>
-              <div>
-                <h4>Guided by calm motion</h4>
-                <p>Subtle transitions add depth without distracting from the message.</p>
-              </div>
-            </div>
-            <div class="list-row">
-              <div class="dot"></div>
-              <div>
-                <h4>Ready for any brand</h4>
-                <p>Neutral palette and sensible spacing make customization painless.</p>
-              </div>
-            </div>
-          </div>
-        </section>
+            </aside>
 
-        <section id="cta" class="section cta">
-          <div class="cta-inner">
-            <div>
-              <p class="eyebrow">Call to action</p>
-              <h2>Fall in love with your launch.</h2>
-              <p class="muted">
-                Ship the most lovable version of your story today. Update the copy, adjust the
-                accent color, and publish—no fuss.
-              </p>
-            </div>
-            <div class="cta-actions">
-              <button class="pill" id="ctaButton" type="button">Make it yours</button>
-              <p class="small" id="ctaResult" aria-live="polite"></p>
-            </div>
+            <section class="card interaction" aria-labelledby="replyTitle">
+              <h2 id="replyTitle" class="h4">Your response</h2>
+              <label class="visually-hidden" for="advisorInput">Type your response</label>
+              <textarea id="advisorInput" rows="7" placeholder="Example: Hi there! Thanks for sharing—tell me a bit about how your skin feels by midday? Based on oiliness and breakouts, I’d suggest a gentle gel cleanser and a lightweight SPF 50…"></textarea>
+              <div class="actions">
+                <button id="sendBtn" class="pill" type="button">Send</button>
+                <button id="clearBtn" class="ghost" type="button">Clear</button>
+              </div>
+              <div class="scores" aria-live="polite" aria-atomic="true">
+                <div class="score"><span>Empathy</span><progress id="scoreEmpathy" max="100" value="0"></progress><output id="scoreEmpathyOut">0</output></div>
+                <div class="score"><span>Discovery</span><progress id="scoreDiscovery" max="100" value="0"></progress><output id="scoreDiscoveryOut">0</output></div>
+                <div class="score"><span>Product fit</span><progress id="scoreFit" max="100" value="0"></progress><output id="scoreFitOut">0</output></div>
+                <div class="score"><span>Safety/usage</span><progress id="scoreSafety" max="100" value="0"></progress><output id="scoreSafetyOut">0</output></div>
+                <div class="score"><span>Close</span><progress id="scoreClose" max="100" value="0"></progress><output id="scoreCloseOut">0</output></div>
+              </div>
+            </section>
+
+            <section id="coach" class="card coach" aria-labelledby="coachTitle">
+              <h2 id="coachTitle" class="h4">Virtual trainer feedback</h2>
+              <ul id="coachList" class="coach-list" aria-live="polite"></ul>
+              <details class="cheatsheet">
+                <summary>Cheat‑sheet: ingredient cues</summary>
+                <div class="cheatsheet-grid">
+                  <div>
+                    <h3 class="h5">Oily / acne‑prone</h3>
+                    <p class="small">Non‑comedogenic, oil‑free gel cleanser, salicylic acid, niacinamide, clay mask, lightweight SPF 50.</p>
+                  </div>
+                  <div>
+                    <h3 class="h5">Dry / sensitive</h3>
+                    <p class="small">Ceramides, hyaluronic acid, fragrance‑free cream cleanser, rich moisturizer, SPF 50 comfort finish.</p>
+                  </div>
+                  <div>
+                    <h3 class="h5">Uneven tone</h3>
+                    <p class="small">Vitamin C, niacinamide, daily SPF 50, gentle exfoliation 1–2x/week.</p>
+                  </div>
+                  <div>
+                    <h3 class="h5">Lines / firmness</h3>
+                    <p class="small">Retinol (slow introduction), peptides, SPF 50 every morning.</p>
+                  </div>
+                </div>
+              </details>
+            </section>
+
+            <section id="transcript" class="card transcript" aria-labelledby="transcriptTitle">
+              <h2 id="transcriptTitle" class="h4">Transcript</h2>
+              <div id="feed" class="feed" aria-live="polite"></div>
+            </section>
           </div>
         </section>
       </main>
 
-      <footer class="container footer">
-        <small>© <span id="year"></span> Bloom—crafted for clarity.</small>
+      <footer class="container footer" role="contentinfo">
+        <small>© <span id="year"></span> Advisor Trainer. Not affiliated with or endorsed by L’Oréal. For training simulation only.</small>
       </footer>
     </div>
 
     <script src="./script.js" defer></script>
   </body>
 </html>
+
