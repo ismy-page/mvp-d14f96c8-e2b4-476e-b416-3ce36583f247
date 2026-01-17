@@ -1,0 +1,186 @@
+name: validate-static
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine base ref
+        id: base
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "BASE=origin/${{ github.base_ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "BASE=${{ github.sha }}^" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Enforce allowed changed files
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${{ steps.base.outputs.BASE }}"
+          echo "Comparing against base: $BASE"
+
+          CHANGED="$(git diff --name-only "$BASE"...HEAD || true)"
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          # Allowed paths:
+          # - index.html
+          # - style.css
+          # - script.js
+          # - assets/** (static assets only; validated separately)
+          ALLOW_REGEX='^(index\.html|style\.css|script\.js|assets\/.+)$'
+
+          # Block any edits under .github/ to prevent workflow tampering
+          if echo "$CHANGED" | grep -E '^\.github/' >/dev/null 2>&1; then
+            echo "❌ Changes under .github/ are not allowed."
+            exit 1
+          fi
+
+          # Reject any file outside allowlist
+          if [ -n "${CHANGED:-}" ]; then
+            BAD="$(echo "$CHANGED" | grep -Ev "$ALLOW_REGEX" || true)"
+            if [ -n "${BAD:-}" ]; then
+              echo "❌ Disallowed file changes detected:"
+              echo "$BAD"
+              exit 1
+            fi
+          fi
+
+          echo "✅ Changed files comply with allowlist."
+
+      - name: Enforce required files and size budgets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          max_html=200000
+          max_css=200000
+          max_js=300000
+
+          check_size () {
+            f="$1"; max="$2"
+            if [ ! -f "$f" ]; then
+              echo "❌ Missing required file: $f"
+              exit 1
+            fi
+            bytes=$(wc -c < "$f")
+            echo "$f: $bytes bytes (max $max)"
+            if [ "$bytes" -gt "$max" ]; then
+              echo "❌ $f exceeds size budget."
+              exit 1
+            fi
+          }
+
+          check_size index.html "$max_html"
+          check_size style.css "$max_css"
+          check_size script.js "$max_js"
+
+          # Ensure assets folder marker exists (so folder shows up even if empty)
+          if [ ! -f "assets/README.md" ]; then
+            echo "❌ Missing required file: assets/README.md"
+            exit 1
+          fi
+
+          echo "✅ Required files exist and are within budgets."
+
+      - name: Validate HTML references and block remote scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require("fs");
+
+          const html = fs.readFileSync("index.html", "utf8");
+
+          // Must reference local CSS + JS
+          const hasCss = /<link[^>]+href=["']\.\/style\.css["'][^>]*>/i.test(html)
+                      || /<link[^>]+href=["']style\.css["'][^>]*>/i.test(html);
+          const hasJs  = /<script[^>]+src=["']\.\/script\.js["'][^>]*>/i.test(html)
+                      || /<script[^>]+src=["']script\.js["'][^>]*>/i.test(html);
+
+          if (!hasCss) throw new Error("Missing <link> to style.css");
+          if (!hasJs)  throw new Error("Missing <script> to script.js");
+
+          // Disallow remote scripts by default (tighten publishing risk)
+          const remoteScript = /<script[^>]+src=["']https?:\/\//i.test(html);
+          if (remoteScript) throw new Error('Remote <script src="http(s)://..."> is not allowed.');
+
+          console.log("✅ HTML references OK and no remote scripts found.");
+          NODE
+
+      - name: Smoke check JS syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check script.js
+          echo "✅ script.js parses."
+
+      - name: Validate assets folder contents
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -d assets ]; then
+            echo "Checking assets folder…"
+
+            # Disallow executable/script-like files in assets by allowlisting extensions
+            BAD_ASSETS="$(find assets -type f \
+              ! -name '*.png' \
+              ! -name '*.jpg' \
+              ! -name '*.jpeg' \
+              ! -name '*.svg' \
+              ! -name '*.webp' \
+              ! -name '*.gif' \
+              ! -name '*.woff' \
+              ! -name '*.woff2' \
+              ! -name '*.ttf' \
+              ! -name '*.otf' \
+              ! -name '*.eot' \
+              ! -name 'README.md' \
+              -print || true)"
+
+            if [ -n "${BAD_ASSETS:-}" ]; then
+              echo "❌ Disallowed files found in assets/:"
+              echo "$BAD_ASSETS"
+              exit 1
+            fi
+          fi
+
+          echo "✅ Assets folder contents valid."
+
+      - name: Enforce asset size limits
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          max_asset_bytes=2000000 # 2 MB per file
+
+          if [ -d assets ]; then
+            while IFS= read -r -d '' f; do
+              size=$(wc -c < "$f")
+              echo "$f: $size bytes (max $max_asset_bytes)"
+              if [ "$size" -gt "$max_asset_bytes" ]; then
+                echo "❌ Asset too large: $f"
+                exit 1
+              fi
+            done < <(find assets -type f -print0)
+          fi
+
+          echo "✅ Asset sizes within limits."

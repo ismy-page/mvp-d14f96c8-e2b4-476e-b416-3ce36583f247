@@ -1,0 +1,56 @@
+name: deploy-pages
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      COMMIT_ID: ${{ github.event.pull_request.head.sha || github.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepare commit-scoped artifact
+        run: |
+          set -euo pipefail
+          OUTPUT_DIR="dist/${COMMIT_ID}"
+          mkdir -p dist
+          rm -rf "$OUTPUT_DIR"
+          mkdir -p "$OUTPUT_DIR"
+
+          cp index.html style.css script.js "$OUTPUT_DIR"/
+          cp -a assets "$OUTPUT_DIR"/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Publish commit preview URL
+        run: |
+          set -euo pipefail
+          COMMIT_PREVIEW_URL="${{ steps.deployment.outputs.page_url }}${{ env.COMMIT_ID }}/"
+          echo "Commit preview: ${COMMIT_PREVIEW_URL}"
+          echo "Commit preview URL: ${COMMIT_PREVIEW_URL}" >> "$GITHUB_STEP_SUMMARY"
